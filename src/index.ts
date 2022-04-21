@@ -27,3 +27,6 @@ export type { RadioButtonGroupProps } from './RadioButtonGroup'
 
 export { default as SwitchElement } from './SwitchElement'
 export type { SwitchElementProps } from './SwitchElement'
+
+export { default as AutocompleteElement } from './AutocompleteElement'
+export type { AutocompleteElementProps } from './AutocompleteElement'

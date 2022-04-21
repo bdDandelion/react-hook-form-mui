@@ -1,8 +1,17 @@
 import React, { createElement } from 'react'
 import { MenuItem, TextField, TextFieldProps } from '@mui/material'
-import { Control, Controller, ControllerProps, FieldError } from 'react-hook-form'
+import {
+  Control,
+  Controller,
+  ControllerProps,
+  FieldError,
+} from 'react-hook-form'
+import type { ReactNode } from 'react'
 
-export type SelectElementProps = Omit<TextFieldProps, 'name' | 'type' | 'onChange'> & {
+export type SelectElementProps = Omit<
+  TextFieldProps,
+  'name' | 'type' | 'onChange'
+> & {
   validation?: ControllerProps['rules']
   name: string
   options?: any[]
@@ -13,6 +22,7 @@ export type SelectElementProps = Omit<TextFieldProps, 'name' | 'type' | 'onChang
   objectOnChange?: boolean
   onChange?: (value: any) => void
   control?: Control<any>
+  optionRender?: (record: any) => ReactNode
 }
 
 export default function SelectElement({
@@ -26,6 +36,7 @@ export default function SelectElement({
   objectOnChange,
   validation = {},
   control,
+  optionRender,
   ...rest
 }: SelectElementProps): JSX.Element {
   const isNativeSelect = !!rest.SelectProps?.native
@@ -38,7 +49,10 @@ export default function SelectElement({
       name={name}
       rules={validation}
       control={control}
-      render={({ field: { onBlur, onChange, value }, fieldState: { invalid, error } }) => {
+      render={({
+        field: { onBlur, onChange, value },
+        fieldState: { invalid, error },
+      }) => {
         // handle shrink on number input fields
         if (type === 'number' && value) {
           rest.InputLabelProps = rest.InputLabelProps || {}
@@ -47,40 +61,51 @@ export default function SelectElement({
         if (typeof value === 'object') {
           value = value[valueKey] // if value is object get key
         }
-        return <TextField
-          {...rest}
-          name={name}
-          value={value || ''}
-          onBlur={onBlur}
-          onChange={(event) => {
-            let item: number | string = event.target.value
-            if (type === 'number') {
-              item = Number(item)
-            }
-            onChange(item)
-            if (typeof rest.onChange === 'function') {
-              if (objectOnChange) {
-                item = options.find(i => i[valueKey] === item)
+        return (
+          <TextField
+            {...rest}
+            name={name}
+            value={value || ''}
+            onBlur={onBlur}
+            onChange={(event) => {
+              let item: number | string = event.target.value
+              if (type === 'number') {
+                item = Number(item)
               }
-              rest.onChange(item)
+              onChange(item)
+              if (typeof rest.onChange === 'function') {
+                if (objectOnChange) {
+                  item = options.find((i) => i[valueKey] === item)
+                }
+                rest.onChange(item)
+              }
+            }}
+            select
+            required={required}
+            error={invalid}
+            helperText={
+              error
+                ? typeof parseError === 'function'
+                  ? parseError(error)
+                  : error.message
+                : rest.helperText
             }
-          }}
-          select
-          required={required}
-          error={invalid}
-          helperText={error ? (typeof parseError === 'function' ? parseError(error) : error.message) : rest.helperText}
-        >{isNativeSelect && <option />}
-          {options.map((item: any) =>
-            createElement(
-              ChildComponent,
-              {
-                key: `${name}_${item[valueKey]}`,
-                value: item[valueKey]
-              },
-              item[labelKey]
-            )
-          )}
-        </TextField>
+          >
+            {isNativeSelect && <option />}
+            {optionRender && options.map(optionRender)}
+            {!optionRender &&
+              options.map((item: any) =>
+                createElement(
+                  ChildComponent,
+                  {
+                    key: `${name}_${item[valueKey]}`,
+                    value: item[valueKey],
+                  },
+                  item[labelKey]
+                )
+              )}
+          </TextField>
+        )
       }}
     />
   )

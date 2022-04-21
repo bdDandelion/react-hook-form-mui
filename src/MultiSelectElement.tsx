@@ -10,7 +10,7 @@ import {
   ListItemText,
   MenuItem,
   Select,
-  SelectProps
+  SelectProps,
 } from '@mui/material'
 
 export type MultiSelectElementProps = Omit<SelectProps, 'value'> & {
@@ -55,7 +55,6 @@ export default function MultiSelectElement({
   showCheckbox,
   ...rest
 }: MultiSelectElementProps): JSX.Element {
-
   if (required) {
     validation.required = 'This field is required'
   }
@@ -65,8 +64,17 @@ export default function MultiSelectElement({
       name={name}
       rules={validation}
       control={control}
-      render={({ field: { value, onChange, onBlur }, fieldState: { invalid, error } }) => {
-        helperText = error ? (typeof parseError === 'function' ? parseError(error) : error.message) : helperText
+      render={({
+        field: { value, onChange, onBlur },
+        fieldState: { invalid, error },
+      }) => {
+        console.log('value', value)
+        console.log('onChange', onChange)
+        helperText = error
+          ? typeof parseError === 'function'
+            ? parseError(error)
+            : error.message
+          : helperText
         return (
           <FormControl
             variant={variant}
@@ -75,7 +83,11 @@ export default function MultiSelectElement({
             error={invalid}
           >
             {label && (
-              <InputLabel error={invalid} htmlFor={rest.id || `select-multi-select-${name}`} required={required}>
+              <InputLabel
+                error={invalid}
+                htmlFor={rest.id || `select-multi-select-${name}`}
+                required={required}
+              >
                 {label}
               </InputLabel>
             )}
@@ -93,33 +105,48 @@ export default function MultiSelectElement({
                 PaperProps: {
                   style: {
                     maxHeight: menuMaxHeight,
-                    width: menuMaxWidth
-                  }
-                }
+                    width: menuMaxWidth,
+                  },
+                },
               }}
-              renderValue={typeof rest.renderValue === 'function' ? rest.renderValue : showChips ? (selected) => (
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                  {(selected as any[] || []).map((selectedValue) => (
-                    <Chip
-                      key={selectedValue}
-                      label={selectedValue}
-                      style={{ display: 'flex', flexWrap: 'wrap' }}
-                      onDelete={() => {
-                        onChange(value.filter((i: any) => i !== selectedValue))
-                        // setValue(name, formValue.filter((i: any) => i !== value), { shouldValidate: true })
-                      }}
-                      deleteIcon={<CloseIcon
-                        onMouseDown={(ev) => {
-                          ev.stopPropagation()
-                        }} />
-                      }
-                    />
-                  ))}
-                </div>
-              ) : (selected) => selected?.join(', ')}
+              renderValue={
+                typeof rest.renderValue === 'function'
+                  ? rest.renderValue
+                  : showChips
+                  ? (selected) => (
+                      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                        {((selected as any[]) || []).map((selectedValue) => (
+                          <Chip
+                            key={selectedValue}
+                            label={selectedValue}
+                            style={{ display: 'flex', flexWrap: 'wrap' }}
+                            onDelete={() => {
+                              onChange(
+                                value.filter((i: any) => i !== selectedValue)
+                              )
+                              // setValue(name, formValue.filter((i: any) => i !== value), { shouldValidate: true })
+                            }}
+                            deleteIcon={
+                              <CloseIcon
+                                onMouseDown={(ev) => {
+                                  ev.stopPropagation()
+                                }}
+                              />
+                            }
+                          />
+                        ))}
+                      </div>
+                    )
+                  : (selected) => selected?.join(', ')
+              }
             >
               {menuItems.map((item: any) => {
+                console.log('111', value)
+
                 const isChecked = value?.includes(item) ?? false
+                console.log('item', item)
+                console.log('isChecked', isChecked)
+
                 const key = itemValue || itemKey
                 let val = key ? item[key] : item
                 return (
@@ -127,11 +154,16 @@ export default function MultiSelectElement({
                     key={val}
                     value={val}
                     sx={{
-                      fontWeight: (theme) => isChecked ? theme.typography.fontWeightBold : theme.typography.fontWeightRegular
+                      fontWeight: (theme) =>
+                        isChecked
+                          ? theme.typography.fontWeightBold
+                          : theme.typography.fontWeightRegular,
                     }}
                   >
                     {showCheckbox && <Checkbox checked={isChecked} />}
-                    <ListItemText primary={itemLabel ? item[itemLabel] : item} />
+                    <ListItemText
+                      primary={itemLabel ? item[itemLabel] : item}
+                    />
                   </MenuItem>
                 )
               })}
@@ -143,4 +175,3 @@ export default function MultiSelectElement({
     />
   )
 }
-
